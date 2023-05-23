@@ -13,9 +13,7 @@ class UserSerializer(ModelSerializer):
             'email',
             'id',
             'username',
+            # 'is_subscribed',
             'first_name',
             'last_name',
-            'password',
         )
-
-cl
