@@ -9,6 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class TagView(ReadOnlyModelViewSet):
@@ -27,6 +28,18 @@ class RecipeView(ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     pagination_class = PageLimitPagination
+    filter_backends = [DjangoFilterBackend, ]
+    filterset_fields = ['author', 'tags', ]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        is_favorited = self.request.query_params.get('is_favorited')
+        is_in_shopping_cart = self.request.query_params.get('is_in_shopping_cart')
+        if is_favorited == '1':
+            queryset = queryset.filter(in_favorites__user=self.request.user)
+        if is_in_shopping_cart == '1':
+            queryset = queryset.filter(in_carts__user=self.request.user)
+        return queryset
 
     @action(
         methods=['post', 'delete', ],
@@ -99,19 +112,18 @@ class RecipeView(ModelViewSet):
         url_path='download_shopping_cart'
     )
     def download_shopping_cart(self, request):
-        user = self.request.user
-        if not user.carts.exists():
-            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         ingredients = Ingredient.objects.filter(
-            recipe__recipe__in_carts__user=user
+            recipe__recipe__in_carts__user=request.user
         ).values(
             'name',
             measurement=F('measurement_unit')
         ).annotate(amount=Sum('recipe__amount'))
 
-        lines = [f"{obj.attribute_name}\n" for obj in ingredients]
+        lines = [f"{ingredients}\n" for obj in ingredients]
 
         response = HttpResponse(lines, content_type='text/plain')
 
         response['Content-Disposition'] = 'attachment; filename="to_buy.txt"'
+
+        return response
