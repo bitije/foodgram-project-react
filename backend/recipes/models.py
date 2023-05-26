@@ -24,6 +24,9 @@ class Tag(Model):
         db_index=False,
     )
 
+    class Meta:
+        ordering = ('name',)
+
     def __str__(self) -> str:
         return f'{self.name} ({self.color})'
 
@@ -35,6 +38,9 @@ class Ingredient(Model):
     measurement_unit = CharField(
         max_length=24,
     )
+
+    class Meta:
+        ordering = ('name',)
 
     def __str__(self) -> str:
         return f'{self.name} {self.measurement_unit}'
@@ -73,6 +79,9 @@ class Recipe(Model):
         default=0,
     )
 
+    class Meta:
+        ordering = ('-pub_date', )
+
     def __str__(self) -> str:
         return f'{self.name}'
 
@@ -91,6 +100,9 @@ class AmountIngredient(Model):
     amount = PositiveSmallIntegerField(
         default=0,
     )
+
+    class Meta:
+        ordering = ('recipe', )
 
     def __str__(self) -> str:
         return f'{self.amount} {self.ingredients}'
@@ -112,6 +124,9 @@ class Favorite(Model):
         editable=False
     )
 
+    class Meta:
+        ordering = ('user', )
+
     def __str__(self) -> str:
         return f'{self.user} : {self.recipe}'
 
@@ -131,6 +146,9 @@ class Cart(Model):
         auto_now_add=True,
         editable=False
     )
+
+    class Meta:
+        ordering = ('user', )
 
     def __str__(self) -> str:
         return f'{self.user} : {self.recipe}'

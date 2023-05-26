@@ -23,6 +23,12 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
+    class Meta:
+        ordering = ('username',)
+
+    def __str__(self) -> str:
+        return f'{self.username}: {self.email}'
+
 
 class Subscription(models.Model):
     author = models.ForeignKey(
@@ -35,3 +41,9 @@ class Subscription(models.Model):
         to=CustomUser,
         on_delete=models.CASCADE,
     )
+
+    class Meta:
+        ordering = ('author',)
+
+    def __str__(self) -> str:
+        return f'{self.follower.username} -> {self.author.username}'
