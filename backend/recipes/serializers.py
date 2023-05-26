@@ -42,15 +42,12 @@ class RecipeSerializer(ModelSerializer):
         )
 
     def get_is_favorited(self, recipe: Recipe) -> bool:
-        user = self.context.get('view').request.user
-
-        if user.is_anonymous:
-            return False
+        user = self.context.get('request').user
 
         return user.favorites.filter(recipe=recipe).exists()
 
     def get_is_in_shopping_cart(self, recipe: Recipe) -> bool:
-        user = self.context.get('view').request.user
+        user = self.context.get('request').user
 
         if user.is_anonymous:
             return False
@@ -62,3 +59,10 @@ class RecipeSerializer(ModelSerializer):
             'id', 'name', 'measurement_unit', amount=F('recipe__amount')
         )
         return ingredients
+
+
+class ShortRecipeSerializer(ModelSerializer):
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')

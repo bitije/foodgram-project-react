@@ -2,7 +2,8 @@ from django.http import HttpResponse
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from .pagination import PageLimitPagination
 from .models import Tag, Ingredient, Recipe, Favorite, Cart
-from .serializers import TagSerializer, IngredientSerializer, RecipeSerializer
+from .serializers import (TagSerializer, IngredientSerializer,
+                          RecipeSerializer, ShortRecipeSerializer)
 from django.db.models import F, Sum
 from .permissions import AdminOrReadOnly
 from rest_framework.decorators import action
@@ -37,8 +38,10 @@ class RecipeView(ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        is_favorited = self.request.query_params.get('is_favorited')
-        is_in_shopping_cart = self.request.query_params.get('is_in_shopping_cart')
+        is_favorited = self.request.query_params.get(
+            'is_favorited', '0')
+        is_in_shopping_cart = self.request.query_params.get(
+            'is_in_shopping_cart', '0')
         is_favorited = True if is_favorited == '1' else False
         is_in_shopping_cart = True if is_in_shopping_cart == '1' else False
         if is_favorited:
@@ -57,7 +60,7 @@ class RecipeView(ModelViewSet):
         self.auth_check()
         fav_recipe = get_object_or_404(Recipe, pk=pk)
         if request.method == 'POST':
-            return self.favorite_post(request=request, fav_recipe=fav_recipe)
+            return self.favorite_post(request, fav_recipe)
         elif request.method == 'DELETE':
             return self.favorite_delete(request=request, fav_recipe=fav_recipe)
 
@@ -71,13 +74,7 @@ class RecipeView(ModelViewSet):
         self.auth_check()  # Проверка на авторизацию
         to_buy = get_object_or_404(Recipe, pk=pk)
         if request.method == 'POST':
-            con = Cart.objects.filter(user=request.user, recipe=to_buy)
-            if con.exists():
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            else:
-                Cart.objects.create(recipe=to_buy, user=request.user)
-                data = RecipeSerializer(to_buy, context={'request': request})
-                return Response(data=data.data, status=status.HTTP_200_OK)
+            return self.shopping_post(request, to_buy)
         elif request.method == 'DELETE':
             return self.shopping_delete(request=request, to_buy=to_buy)
 
@@ -99,23 +96,22 @@ class RecipeView(ModelViewSet):
         response['Content-Disposition'] = 'attachment; filename="to_buy.txt"'
         return response
 
-    # def shopping_post(self, request, to_buy):
-    #     con = Cart.objects.filter(user=request.user).filter(
-    #         recipe=to_buy)
-    #     if con.exists():
-    #         return Response(status=status.HTTP_400_BAD_REQUEST)
-    #     else:
-    #         Cart.objects.create(recipe=to_buy, user=request.user)
-    #         data = to_buy
-    #         return Response(data=RecipeSerializer(data).data,
-    #                         status=status.HTTP_200_OK)
+    def shopping_post(self, request, to_buy):
+        con = Cart.objects.filter(user=request.user).filter(
+            recipe=to_buy)
+        if con.exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            Cart.objects.create(recipe=to_buy, user=request.user)
+            serializer = ShortRecipeSerializer(to_buy, context={'request': request})
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
     def shopping_delete(self, request, to_buy):
         try:
             recipe_del = Cart.objects.get(recipe=to_buy, user=request.user)
             recipe_del.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        except Recipe.DoesNotExist:
+        except Exception:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
     def favorite_post(self, request, fav_recipe):
@@ -125,10 +121,8 @@ class RecipeView(ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
             Favorite.objects.create(recipe=fav_recipe, user=request.user)
-            data = fav_recipe
-            serializer = RecipeSerializer(data)
-            return Response(data=serializer.data,
-                            status=status.HTTP_200_OK)
+            serializer = ShortRecipeSerializer(fav_recipe, context={'request': request})
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
     def favorite_delete(self, request, fav_recipe):
         try:
@@ -136,5 +130,5 @@ class RecipeView(ModelViewSet):
                                               user=request.user)
             recipe_del.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        except Recipe.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
