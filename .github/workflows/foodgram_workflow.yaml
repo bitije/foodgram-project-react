@@ -35,7 +35,6 @@ jobs:
         tags: ${{ secrets.DOCKER_USER }}/foodgram_frontend:0.1
 
   deploy:
-deploy:
     runs-on: ubuntu-latest
     needs: build_push_to_DockerHub
     steps:
