@@ -44,7 +44,8 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
-        privateKey: ${{ secrets.PRIVATE_KEY }}
+        passphrase: ${{ secrets.PASSPHRASE }}
+        key: ${{ secrets.PRIVATE_KEY }}
         command: |
           sudo docker-compose stop
           sudo docker-compose rm nginx
