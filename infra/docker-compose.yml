@@ -16,7 +16,7 @@ services:
 
   backend:
     container_name: foodgram-app
-    image: tselomudrije/foodgram_backend:0.1
+    image: tselomudrije/foodgram_backend:0.2
     restart: always
     volumes:
       - static_dir:/app/static/
