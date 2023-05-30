@@ -1,7 +1,13 @@
 from .models import Tag, Ingredient, Recipe
-from rest_framework.serializers import ModelSerializer, SerializerMethodField
+from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
+                                        ReadOnlyField)
 from users.serializers import UserSerializer
+from users.models import Subscription
 from django.db.models import F
+from drf_extra_fields.fields import Base64ImageField
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class TagSerializer(ModelSerializer):
@@ -25,6 +31,7 @@ class RecipeSerializer(ModelSerializer):
     ingredients = SerializerMethodField()
     is_favorited = SerializerMethodField()
     is_in_shopping_cart = SerializerMethodField()
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
@@ -43,6 +50,9 @@ class RecipeSerializer(ModelSerializer):
 
     def get_is_favorited(self, recipe: Recipe) -> bool:
         user = self.context.get('request').user
+
+        if user.is_anonymous:
+            return False
 
         return user.favorites.filter(recipe=recipe).exists()
 
@@ -66,3 +76,20 @@ class ShortRecipeSerializer(ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class SubscriptionSerializer(ModelSerializer):
+    is_subscribed = SerializerMethodField()
+    recipes = ShortRecipeSerializer(many=True, read_only=True)
+    recipes_count = SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username', 'first_name', 'last_name',
+                  'is_subscribed', 'recipes', 'recipes_count')
+
+    def get_is_subscribed(self, obj) -> bool:
+        return True
+
+    def get_recipes_count(self, obj) -> int:
+        return obj.recipes.count()

@@ -4,7 +4,7 @@ from rest_framework.status import (HTTP_200_OK, HTTP_401_UNAUTHORIZED,
 from rest_framework.decorators import action
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
-from .serializers import UserSerializer
+from recipes.serializers import SubscriptionSerializer
 from djoser.views import UserViewSet
 from .pagination import PageLimitPagination
 from .models import Subscription
@@ -23,6 +23,7 @@ class UserView(UserViewSet):
 
     @action(["get", ], detail=False)
     def me(self, request, *args, **kwargs):
+        self.auth_check()
         self.get_object = self.get_instance
         return self.retrieve(request, *args, **kwargs)
 
@@ -33,7 +34,6 @@ class UserView(UserViewSet):
     def subscribe(self, request, id=None) -> Response:
         self.auth_check()
         author = get_object_or_404(User, pk=id)
-        data = UserSerializer(author).data
         if request.method == 'POST':
             con = Subscription.objects.filter(follower=request.user).filter(
                 author=author)
@@ -42,6 +42,7 @@ class UserView(UserViewSet):
             else:
                 Subscription.objects.create(author=author,
                                             follower=request.user)
+                data = SubscriptionSerializer(author).data
                 return Response(data=data, status=HTTP_200_OK)
 
         elif request.method == 'DELETE':
@@ -49,6 +50,7 @@ class UserView(UserViewSet):
                 sub = Subscription.objects.get(author=author,
                                                follower=request.user)
                 sub.delete()
+                data = SubscriptionSerializer(author).data
                 return Response(data=data, status=HTTP_204_NO_CONTENT)
             except Subscription.DoesNotExist:
                 return Response(status=HTTP_404_NOT_FOUND)
@@ -57,5 +59,5 @@ class UserView(UserViewSet):
     def subscriptions(self, request) -> Response:
         self.auth_check()
         data = User.objects.filter(subscribers__follower=request.user)
-        return Response(data=UserSerializer(data, many=True).data,
+        return Response(data=SubscriptionSerializer(data, many=True).data,
                         status=HTTP_200_OK)

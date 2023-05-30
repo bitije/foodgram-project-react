@@ -5,7 +5,8 @@ from .models import Tag, Ingredient, Recipe, Favorite, Cart
 from .serializers import (TagSerializer, IngredientSerializer,
                           RecipeSerializer, ShortRecipeSerializer)
 from django.db.models import F, Sum
-from .permissions import AdminOrReadOnly
+from rest_framework.status import HTTP_401_UNAUTHORIZED
+from .permissions import AdminOrReadOnly, AuthorOrReadOnly
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -29,15 +30,21 @@ class RecipeView(ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     pagination_class = PageLimitPagination
+    permission_classes = (AuthorOrReadOnly,)
     filter_backends = [DjangoFilterBackend, ]
     filterset_fields = ['author', 'tags', ]
 
     def auth_check(self):
         if self.request.user.is_anonymous:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+            return Response(status=HTTP_401_UNAUTHORIZED)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        if self.request.user.is_anonymous:
+            return queryset
         is_favorited = self.request.query_params.get(
             'is_favorited', '0')
         is_in_shopping_cart = self.request.query_params.get(
@@ -71,7 +78,7 @@ class RecipeView(ModelViewSet):
         url_path='shopping_cart'
     )
     def shopping_cart(self, request, pk=None):
-        self.auth_check()  # Проверка на авторизацию
+        self.auth_check()
         to_buy = get_object_or_404(Recipe, pk=pk)
         if request.method == 'POST':
             return self.shopping_post(request, to_buy)
