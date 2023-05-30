@@ -5,6 +5,6 @@
 Внешний адрес работающего сервера
 ```51.250.85.215```
 
-Admin login: ```admin```
+Admin login: ```admin@email.com```
 
 Admin password: ```admin``` 
