@@ -11,6 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
 
@@ -31,7 +32,8 @@ class RecipeView(ModelViewSet):
     serializer_class = RecipeSerializer
     pagination_class = PageLimitPagination
     permission_classes = (AuthorOrReadOnly,)
-    filter_backends = [DjangoFilterBackend, ]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    search_fields = ('slug',)
     filterset_fields = ['author', 'tags', ]
 
     def auth_check(self):

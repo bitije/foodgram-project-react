@@ -58,6 +58,8 @@ class UserView(UserViewSet):
     @action(["get", ], detail=False)
     def subscriptions(self, request) -> Response:
         self.auth_check()
-        data = User.objects.filter(subscribers__follower=request.user)
-        return Response(data=SubscriptionSerializer(data, many=True).data,
-                        status=HTTP_200_OK)
+        pages = self.paginate_queryset(
+            User.objects.filter(subscribers__follower=self.request.user)
+        )
+        serializer = SubscriptionSerializer(pages, many=True)
+        return self.get_paginated_response(serializer.data)

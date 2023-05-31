@@ -1,11 +1,10 @@
 from .models import Tag, Ingredient, Recipe
-from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
-                                        ReadOnlyField)
+from rest_framework.serializers import (ModelSerializer, SerializerMethodField)
 from users.serializers import UserSerializer
-from users.models import Subscription
 from django.db.models import F
 from drf_extra_fields.fields import Base64ImageField
 from django.contrib.auth import get_user_model
+
 
 User = get_user_model()
 
