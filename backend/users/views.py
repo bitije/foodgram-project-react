@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from recipes.serializers import SubscriptionSerializer
 from djoser.views import UserViewSet
 from .pagination import PageLimitPagination
+from rest_framework.permissions import IsAuthenticated
 from .models import Subscription
 from django.shortcuts import get_object_or_404
 
@@ -20,12 +21,6 @@ class UserView(UserViewSet):
     def auth_check(self):
         if self.request.user.is_anonymous:
             return Response(status=HTTP_401_UNAUTHORIZED)
-
-    @action(["get", ], detail=False)
-    def me(self, request, *args, **kwargs):
-        self.auth_check()
-        self.get_object = self.get_instance
-        return self.retrieve(request, *args, **kwargs)
 
     @action(methods=['post', 'delete', ],
             detail=True,
