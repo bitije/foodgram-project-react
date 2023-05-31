@@ -7,7 +7,6 @@ from rest_framework.response import Response
 from recipes.serializers import SubscriptionSerializer
 from djoser.views import UserViewSet
 from .pagination import PageLimitPagination
-from rest_framework.permissions import IsAuthenticated
 from .models import Subscription
 from django.shortcuts import get_object_or_404
 

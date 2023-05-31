@@ -48,8 +48,18 @@ class RecipeView(ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+
+        tags = self.request.query_params.getlist('tags')
+        if tags:
+            queryset = queryset.filter(tags__slug__in=tags).distinct()
+
+        author = self.request.query_params.get('author')
+        if author:
+            queryset = queryset.filter(author=author)
+
         if self.request.user.is_anonymous:
             return queryset
+
         is_favorited = self.request.query_params.get(
             'is_favorited', '0')
         is_in_shopping_cart = self.request.query_params.get(
