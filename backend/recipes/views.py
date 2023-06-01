@@ -26,7 +26,7 @@ class TagView(ReadOnlyModelViewSet):
 class IngredientView(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (AllowAny,)
     pagination_class = None
 
 
@@ -48,28 +48,25 @@ class RecipeView(ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-
         tags = self.request.query_params.getlist('tags')
+        author = self.request.query_params.get('author')
+        is_favorited = self.request.query_params.get('is_favorited', '0')
+        is_in_shopping_cart = self.request.query_params.get('is_in_shopping_cart', '0')
+
         if tags:
             queryset = queryset.filter(tags__slug__in=tags).distinct()
-
-        author = self.request.query_params.get('author')
         if author:
             queryset = queryset.filter(author=author)
 
-        if self.request.user.is_anonymous:
-            return queryset
+        if not self.request.user.is_anonymous:
+            is_favorited = is_favorited == '1'
+            is_in_shopping_cart = is_in_shopping_cart == '1'
 
-        is_favorited = self.request.query_params.get(
-            'is_favorited', '0')
-        is_in_shopping_cart = self.request.query_params.get(
-            'is_in_shopping_cart', '0')
-        is_favorited = True if is_favorited == '1' else False
-        is_in_shopping_cart = True if is_in_shopping_cart == '1' else False
-        if is_favorited:
-            queryset = queryset.filter(in_favorites__user=self.request.user)
-        if is_in_shopping_cart:
-            queryset = queryset.filter(in_carts__user=self.request.user)
+            if is_favorited:
+                queryset = queryset.filter(in_favorites__user=self.request.user)
+            if is_in_shopping_cart:
+                queryset = queryset.filter(in_carts__user=self.request.user)
+
         return queryset
 
     @action(
