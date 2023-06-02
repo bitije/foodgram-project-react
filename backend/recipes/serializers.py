@@ -64,8 +64,6 @@ class RecipeSerializer(ModelSerializer):
     def validate(self, data):
         data['tags'] = self.initial_data.get('tags')
         data['ingredients'] = self.initial_data.get('ingredients')
-        if not data['tags'] or not data['ingredients']:
-            raise ValidationError('Error! Need ingredients/tags!')
         return data
 
     @atomic

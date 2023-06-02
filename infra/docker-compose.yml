@@ -16,9 +16,9 @@ services:
       - ./.env
 
   backend:
-    # build: ../backend/
+    build: ../backend/
     container_name: foodgram-app
-    image: tselomudrije/foodgram_backend:0.9.7
+    # image: tselomudrije/foodgram_backend:0.9.7
     restart: always
     ports:
       - 8000:8000
