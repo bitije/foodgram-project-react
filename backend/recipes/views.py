@@ -6,7 +6,7 @@ from .serializers import (TagSerializer, IngredientSerializer,
                           RecipeSerializer, ShortRecipeSerializer)
 from django.db.models import F, Sum
 from rest_framework.status import HTTP_401_UNAUTHORIZED
-from .permissions import AdminOrReadOnly, AuthorOrReadOnly
+from .permissions import AuthorOrReadOnly
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response

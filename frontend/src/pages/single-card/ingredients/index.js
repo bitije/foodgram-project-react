@@ -13,7 +13,7 @@ const Ingredients = ({ ingredients }) => {
         key={`${name}${amount}${measurement_unit}`}
         className={styles['ingredients__list-item']}
       >
-        {name} - {amount} {measurement_unit}
+        {name} - &nbsp;{amount} &nbsp;{measurement_unit}
       </p>)}
     </div>
   </div>

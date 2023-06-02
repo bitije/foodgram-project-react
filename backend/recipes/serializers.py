@@ -1,10 +1,10 @@
 from .models import Tag, Ingredient, Recipe, AmountIngredient
-from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
-                                        PrimaryKeyRelatedField,)
+from rest_framework.serializers import (ModelSerializer, SerializerMethodField)
 from users.serializers import UserSerializer
-from django.db.models import F
+from django.core.exceptions import ValidationError
 from drf_extra_fields.fields import Base64ImageField
 from django.contrib.auth import get_user_model
+from django.db.transaction import atomic
 
 
 User = get_user_model()
@@ -64,8 +64,11 @@ class RecipeSerializer(ModelSerializer):
     def validate(self, data):
         data['tags'] = self.initial_data.get('tags')
         data['ingredients'] = self.initial_data.get('ingredients')
+        if not data['tags'] or not data['ingredients']:
+            raise ValidationError('Error! Need ingredients/tags!')
         return data
 
+    @atomic
     def create(self, validated_data):
         tags_data = validated_data.pop('tags')
         ingredients_data = validated_data.pop('ingredients')
@@ -85,6 +88,7 @@ class RecipeSerializer(ModelSerializer):
             )
         return recipe
 
+    @atomic
     def update(self, recipe, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
